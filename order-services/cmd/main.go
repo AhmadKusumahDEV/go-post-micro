@@ -8,7 +8,6 @@ import (
 func main() {
 
 	muxHandler := http.NewServeMux()
-
 	muxHandler.HandleFunc("/", handler)
 
 	server := http.Server{
