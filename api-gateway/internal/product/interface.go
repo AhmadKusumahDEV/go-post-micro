@@ -8,7 +8,7 @@ import (
 )
 
 type RepositoryProduct interface {
-	ListProduct(ctx context.Context) (domain.Product, error)
+	ListProduct(ctx context.Context) ([]byte, error)
 	CreateProduct(ctx context.Context, product domain.Product)
 	UpdateProduct(ctx context.Context, product domain.Product)
 	DeleteProduct(ctx context.Context, id string)

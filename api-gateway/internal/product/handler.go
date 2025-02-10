@@ -12,8 +12,6 @@ type HandlerProductImpl struct {
 	Services ServicesProduct
 }
 
-type setkey string
-
 // AddProduct implements HandlerProduct.
 func (h *HandlerProductImpl) AddProduct(writer http.ResponseWriter, request *http.Request) {
 	panic("unimplemented")
