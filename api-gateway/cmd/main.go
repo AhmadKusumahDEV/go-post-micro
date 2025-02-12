@@ -88,5 +88,7 @@ func main() {
 
 	server.Addhandler("/product", GetProductList)
 	err := server.ListenAndServe()
-	utils.Err(err, "msg : failed at up server ||")
+	if err != nil {
+		log.Fatal(err)
+	}
 }

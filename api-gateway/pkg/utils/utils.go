@@ -10,30 +10,25 @@ import (
 func Decode_Json(req *http.Request, result any) {
 	decoder := json.NewDecoder(req.Body)
 	err := decoder.Decode(result)
-	Err(err, "json decode error")
+	if err != nil {
+		log.Fatal(err)
+	}
 }
 
 func Encode_Json(w http.ResponseWriter, result any) {
 	w.Header().Add("Content-Type", "application/json")
 	encoder := json.NewEncoder(w)
 	err := encoder.Encode(result)
-	Err(err, "json encode error")
-}
-
-func Err(e error, msg string) error {
-	if e != nil {
-		if msg != "" {
-			log.Println(e, ": ", msg)
-			return e
-		} else {
-			return e
-		}
+	if err != nil {
+		log.Fatal(err)
 	}
 }
 
 func UrlParse(ul string) *url.URL {
 	u, err := url.Parse(ul)
-	Err(err, "url parse error")
+	if err != nil {
+		log.Fatal(err)
+	}
 	return u
 }
 

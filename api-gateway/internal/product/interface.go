@@ -8,14 +8,14 @@ import (
 )
 
 type RepositoryProduct interface {
-	ListProduct(ctx context.Context) ([]byte, error)
+	ListProduct(ctx context.Context) ([]byte, context.Context, error)
 	CreateProduct(ctx context.Context, product domain.Product)
 	UpdateProduct(ctx context.Context, product domain.Product)
 	DeleteProduct(ctx context.Context, id string)
 }
 
 type ServicesProduct interface {
-	GetProductList(ctx context.Context) (domain.Product, error)
+	GetProductList(ctx context.Context) ([]byte, context.Context, error)
 	AddProduct(ctx context.Context, product domain.Product)
 	ModifyProduct(ctx context.Context, product domain.Product)
 	RemoveProduct(ctx context.Context, id string)

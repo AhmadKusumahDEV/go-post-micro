@@ -20,7 +20,8 @@ func (h *HandlerProductImpl) AddProduct(writer http.ResponseWriter, request *htt
 // GetProductList implements HandlerProduct.
 func (h *HandlerProductImpl) GetProductList(writer http.ResponseWriter, request *http.Request) {
 	ctx := context.WithValue(request.Context(), types.HeaderKey, request.Header)
-	h.Services.GetProductList(ctx)
+	data, context, err := h.Services.GetProductList(ctx)
+
 	utils.Encode_Json(writer, struct {
 		Name string
 	}{

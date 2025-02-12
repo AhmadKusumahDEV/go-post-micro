@@ -2,12 +2,12 @@ package product
 
 import (
 	"context"
+	"fmt"
 	"io"
 	"net/http"
 
 	"github.com/AhmadKusumahDEV/go-post-micro/api-gateway/internal/domain"
 	"github.com/AhmadKusumahDEV/go-post-micro/api-gateway/internal/types"
-	"github.com/AhmadKusumahDEV/go-post-micro/api-gateway/pkg/utils"
 )
 
 type RepositoryProductImpl struct {
@@ -25,25 +25,37 @@ func (r *RepositoryProductImpl) DeleteProduct(ctx context.Context, id string) {
 }
 
 // ListProduct implements RepositoryProduct.
-func (r *RepositoryProductImpl) ListProduct(ctx context.Context) ([]byte, error) {
+func (r *RepositoryProductImpl) ListProduct(ctx context.Context) ([]byte, context.Context, error) {
 	c := ctx.Value(types.HeaderKey).(http.Header)
-	req, err := http.NewRequest("GET", "https://mongokopikan.vercel.app/products", nil)
+	req, err := http.NewRequestWithContext(ctx, http.MethodGet, "https://mongokopikan.vercel.app/products", nil)
+	if err != nil {
+		return nil, nil, fmt.Errorf(types.ErrCreateRequest.Error(), err)
+	}
 
+	// copy header from context
 	for key, values := range c {
 		for _, value := range values {
 			req.Header.Add(key, value)
 		}
 	}
+
 	resp, err := r.http.Do(req)
-	utils.Err(err, "error Repository product Services when get response data")
+	if err != nil {
+		return nil, nil, fmt.Errorf(types.ErrSendRequest.Error(), err)
+	}
+
+	Header := context.WithValue(context.Background(), types.RespHeader, resp.Header)
 
 	defer func() {
 		resp.Body.Close()
 	}()
 
 	read, err := io.ReadAll(resp.Body)
-	utils.Err(err, "error Repository product Services when read response data")
-	return read, nil
+	if err != nil {
+		return nil, nil, fmt.Errorf(types.ErrRead.Error(), err)
+	}
+
+	return read, Header, nil
 }
 
 // UpdateProduct implements RepositoryProduct.

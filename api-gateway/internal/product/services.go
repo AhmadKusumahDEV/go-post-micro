@@ -2,8 +2,11 @@ package product
 
 import (
 	"context"
+	"fmt"
+	"log"
 
 	"github.com/AhmadKusumahDEV/go-post-micro/api-gateway/internal/domain"
+	"github.com/AhmadKusumahDEV/go-post-micro/api-gateway/internal/types"
 	"github.com/redis/go-redis/v9"
 )
 
@@ -18,8 +21,21 @@ func (s *ServicesProductImpl) AddProduct(ctx context.Context, product domain.Pro
 }
 
 // GetProductList implements ServicesProduct.
-func (s *ServicesProductImpl) GetProductList(ctx context.Context) (domain.Product, error) {
-	panic("unimplemented")
+func (s *ServicesProductImpl) GetProductList(ctx context.Context) ([]byte, context.Context, error) {
+	data, err := s.RedisClient.Get(context.Background(), "product").Bytes()
+	if err != nil {
+		log.Printf(types.ErrRedis.Error(), err)
+	}
+
+	if data != nil {
+		return data, nil, nil
+	}
+
+	by, context, err := s.Repository.ListProduct(ctx)
+	if err != nil {
+		return nil, nil, fmt.Errorf(types.ErrRepository.Error(), err)
+	}
+	return by, context, nil
 }
 
 // ModifyProduct implements ServicesProduct.
