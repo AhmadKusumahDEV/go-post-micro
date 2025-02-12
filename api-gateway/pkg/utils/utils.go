@@ -20,11 +20,14 @@ func Encode_Json(w http.ResponseWriter, result any) {
 	Err(err, "json encode error")
 }
 
-func Err(e error, msg string) {
-	if e != nil && msg == "" {
-		log.Println(e)
-	} else if e != nil {
-		log.Fatalln(msg, e)
+func Err(e error, msg string) error {
+	if e != nil {
+		if msg != "" {
+			log.Println(e, ": ", msg)
+			return e
+		} else {
+			return e
+		}
 	}
 }
 
