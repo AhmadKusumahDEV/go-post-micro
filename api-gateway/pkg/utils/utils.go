@@ -1,10 +1,14 @@
 package utils
 
 import (
+	"context"
 	"encoding/json"
 	"log"
 	"net/http"
 	"net/url"
+	"time"
+
+	"github.com/AhmadKusumahDEV/go-post-micro/api-gateway/config"
 )
 
 func Decode_Json(req *http.Request, result any) {
@@ -16,9 +20,7 @@ func Decode_Json(req *http.Request, result any) {
 }
 
 func Encode_Json(w http.ResponseWriter, result any) {
-	w.Header().Add("Content-Type", "application/json")
-	encoder := json.NewEncoder(w)
-	err := encoder.Encode(result)
+	err := json.NewEncoder(w).Encode(result)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -38,4 +40,12 @@ func CopyHeaderRequest(r *http.Request, header http.Header) {
 			r.Header.Add(k, vv)
 		}
 	}
+}
+
+func InsertRedisByte(data []byte, ch chan bool) {
+	redis := config.InitRedis()
+	redis.Set(context.Background(), "product", data, 5*time.Minute)
+	defer func() {
+		ch <- true
+	}()
 }

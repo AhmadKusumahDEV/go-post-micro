@@ -26,8 +26,3 @@ func InitClient() *http.Client {
 }
 
 // type config
-type Header string
-
-const (
-	HeaderKey Header = "header"
-)

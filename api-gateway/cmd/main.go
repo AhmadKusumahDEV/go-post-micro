@@ -6,53 +6,56 @@ import (
 	"log"
 	"net/http"
 
+	"github.com/AhmadKusumahDEV/go-post-micro/api-gateway/api"
+	"github.com/AhmadKusumahDEV/go-post-micro/api-gateway/config"
+	"github.com/AhmadKusumahDEV/go-post-micro/api-gateway/internal/product"
 	"github.com/AhmadKusumahDEV/go-post-micro/api-gateway/pkg/utils"
 )
 
-type Server struct {
-	Engine *http.Server
-	Mux    *CustomMux
-}
+// type Server struct {
+// 	Engine *http.Server
+// 	Mux    *CustomMux
+// }
 
-func (s *Server) GetListHandler() {
-	for _, route := range s.Mux.Listhandler {
-		fmt.Printf("Route: %s\n", route)
-	}
-}
+// func (s *Server) GetListHandler() {
+// 	for _, route := range s.Mux.Listhandler {
+// 		fmt.Printf("Route: %s\n", route)
+// 	}
+// }
 
-func (s *Server) ListenAndServe() error {
-	s.GetListHandler()
-	log.Println("Server is running on port", s.Engine.Addr)
-	return s.Engine.ListenAndServe()
-}
+// func (s *Server) ListenAndServe() error {
+// 	s.GetListHandler()
+// 	log.Println("Server is running on port", s.Engine.Addr)
+// 	return s.Engine.ListenAndServe()
+// }
 
-func (s *Server) Addhandler(pattern string, handler func(http.ResponseWriter, *http.Request)) {
-	s.PushListHandler(pattern)
-	s.Mux.MuxHandler.HandleFunc(pattern, handler)
-}
+// func (s *Server) Addhandler(pattern string, handler func(http.ResponseWriter, *http.Request)) {
+// 	s.PushListHandler(pattern)
+// 	s.Mux.MuxHandler.HandleFunc(pattern, handler)
+// }
 
-func (s *Server) PushListHandler(pattern string) {
-	s.Mux.Listhandler = append(s.Mux.Listhandler, pattern)
-}
+// func (s *Server) PushListHandler(pattern string) {
+// 	s.Mux.Listhandler = append(s.Mux.Listhandler, pattern)
+// }
 
-type CustomMux struct {
-	MuxHandler  *http.ServeMux
-	Listhandler []string
-}
+// type CustomMux struct {
+// 	MuxHandler  *http.ServeMux
+// 	Listhandler []string
+// }
 
-func NewServer(port string) *Server {
-	customMux := CustomMux{
-		MuxHandler:  http.NewServeMux(),
-		Listhandler: []string{},
-	}
-	return &Server{
-		Engine: &http.Server{
-			Addr:    port,
-			Handler: customMux.MuxHandler,
-		},
-		Mux: &customMux,
-	}
-}
+// func NewServer(port string) *Server {
+// 	customMux := CustomMux{
+// 		MuxHandler:  http.NewServeMux(),
+// 		Listhandler: []string{},
+// 	}
+// 	return &Server{
+// 		Engine: &http.Server{
+// 			Addr:    port,
+// 			Handler: customMux.MuxHandler,
+// 		},
+// 		Mux: &customMux,
+// 	}
+// }
 
 func GetProductList(writer http.ResponseWriter, request *http.Request) {
 	type setkey string
@@ -84,8 +87,16 @@ func GetProductList(writer http.ResponseWriter, request *http.Request) {
 }
 
 func main() {
-	server := NewServer(":9090")
+	redis := config.InitRedis()
+	httpClient := config.InitClient()
 
+	productRepository := product.NewRepositoryProductImpl(httpClient)
+	ProductServices := product.NewServicesProduct(productRepository, redis)
+	productHandler := product.NewHandlerProductImp(ProductServices)
+
+	server := config.NewServer(":9090")
+
+	api.ProductRouter(server, productHandler)
 	server.Addhandler("/product", GetProductList)
 	err := server.ListenAndServe()
 	if err != nil {
