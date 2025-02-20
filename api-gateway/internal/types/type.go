@@ -2,6 +2,7 @@ package types
 
 import (
 	"errors"
+	"net/http"
 )
 
 var (
@@ -17,9 +18,17 @@ var (
 	ErrRepository    = errors.New("repository Error, %w")
 )
 
+type Midel struct {
+	Handler http.Handler
+}
+
+func (t *Midel) ServeHTTP(w http.ResponseWriter, r *http.Request) {}
+
 type Header string
+type ChannelGroup map[string]chan bool
 
 const (
-	HeaderKey  Header = "header"
-	RespHeader Header = "resp"
+	HeaderKey     Header = "header"
+	RespKeyHeader Header = "resp"
+	PostKeyCtx    Header = "post"
 )

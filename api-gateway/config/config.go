@@ -17,7 +17,7 @@ func InitRedis() *redis.Client {
 
 func InitClient() *http.Client {
 	return &http.Client{
-		Timeout: 10 * time.Second,
+		Timeout: 30 * time.Second,
 		Transport: &http.Transport{
 			MaxIdleConns:    100,
 			IdleConnTimeout: 30 * time.Second,

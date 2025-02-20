@@ -5,57 +5,15 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"time"
 
 	"github.com/AhmadKusumahDEV/go-post-micro/api-gateway/api"
 	"github.com/AhmadKusumahDEV/go-post-micro/api-gateway/config"
+	"github.com/AhmadKusumahDEV/go-post-micro/api-gateway/internal/domain"
 	"github.com/AhmadKusumahDEV/go-post-micro/api-gateway/internal/product"
 	"github.com/AhmadKusumahDEV/go-post-micro/api-gateway/pkg/utils"
+	"github.com/go-playground/validator/v10"
 )
-
-// type Server struct {
-// 	Engine *http.Server
-// 	Mux    *CustomMux
-// }
-
-// func (s *Server) GetListHandler() {
-// 	for _, route := range s.Mux.Listhandler {
-// 		fmt.Printf("Route: %s\n", route)
-// 	}
-// }
-
-// func (s *Server) ListenAndServe() error {
-// 	s.GetListHandler()
-// 	log.Println("Server is running on port", s.Engine.Addr)
-// 	return s.Engine.ListenAndServe()
-// }
-
-// func (s *Server) Addhandler(pattern string, handler func(http.ResponseWriter, *http.Request)) {
-// 	s.PushListHandler(pattern)
-// 	s.Mux.MuxHandler.HandleFunc(pattern, handler)
-// }
-
-// func (s *Server) PushListHandler(pattern string) {
-// 	s.Mux.Listhandler = append(s.Mux.Listhandler, pattern)
-// }
-
-// type CustomMux struct {
-// 	MuxHandler  *http.ServeMux
-// 	Listhandler []string
-// }
-
-// func NewServer(port string) *Server {
-// 	customMux := CustomMux{
-// 		MuxHandler:  http.NewServeMux(),
-// 		Listhandler: []string{},
-// 	}
-// 	return &Server{
-// 		Engine: &http.Server{
-// 			Addr:    port,
-// 			Handler: customMux.MuxHandler,
-// 		},
-// 		Mux: &customMux,
-// 	}
-// }
 
 func GetProductList(writer http.ResponseWriter, request *http.Request) {
 	type setkey string
@@ -75,29 +33,54 @@ func GetProductList(writer http.ResponseWriter, request *http.Request) {
 
 	fmt.Println(req.Header)
 	initContex = context.WithValue(initContex, headerkey, req.Header)
-	data := initContex.Value(headerkey)
+	data := initContex.Value(headerkey).(http.Header)
 	fmt.Println(data)
 	utils.Encode_Json(writer, struct {
-		Name    string
-		Context any
+		Status string
+		Code   int
+		Data   any
 	}{
-		Name:    "test",
-		Context: data,
+		Status: "ok",
+		Code:   200,
+		Data:   "sangat baik",
 	})
+}
+
+func handlerer(writer http.ResponseWriter, _ *http.Request) {
+	// 1. Kirim response ke client terlebih dahulu
+	log.Println("lama2")
+	utils.Encode_Json(writer, domain.Response{
+		Status: "ok",
+		Code:   http.StatusOK,
+		Data:   "berhasil post data",
+	})
+	log.Println("berhasil post dan bila gagal maka send to message broker")
+
+	// 2. Jalankan proses async di goroutine (TANPA channel di handler)
+	go func() {
+		// Simulasi proses async (e.g., kirim ke message broker)
+		time.Sleep(2 * time.Second)
+		log.Println("Proses async selesai")
+
+		// Jika gagal, kirim ke message broker di sini
+		// ...
+	}()
 }
 
 func main() {
 	redis := config.InitRedis()
 	httpClient := config.InitClient()
+	validasi := validator.New()
 
 	productRepository := product.NewRepositoryProductImpl(httpClient)
-	ProductServices := product.NewServicesProduct(productRepository, redis)
+	ProductServices := product.NewServicesProduct(productRepository, redis, validasi)
 	productHandler := product.NewHandlerProductImp(ProductServices)
 
 	server := config.NewServer(":9090")
-
+	server.Use(&api.CorsMiddelware{Handler: server.Mux.MuxHandler})
 	api.ProductRouter(server, productHandler)
-	server.Addhandler("/product", GetProductList)
+	server.Addhandler("/test", GetProductList)
+	server.Addhandler("/test2", handlerer)
 	err := server.ListenAndServe()
 	if err != nil {
 		log.Fatal(err)
